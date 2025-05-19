@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int    @id @default(autoincrement())
+  roleId     Int
+  name       String
+  surname    String
+  patronymic String
+
+  role Role @relation(fields: [roleId], references: [id])
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  users User[]
+}
+
+model Teacher {
+  id              Int    @id @default(autoincrement())
+  classroomNumber String
+  classId         Int?   @unique
+
+  class       Class?                @relation("TeacherClass", fields: [classId], references: [id])
+  disciplines TeachersDisciplines[]
+}
+
+model Discipline {
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+
+  teachers TeachersDisciplines[]
+  classes  ClassesDisciplines[]
+  marks    DisciplinePupilsMark[]
+}
+
+model Class {
+  id           Int  @id @default(autoincrement())
+  classTeacher Int? @unique
+
+  pupils      Pupil[]
+  disciplines ClassesDisciplines[]
+
+  assignedTeacher Teacher? @relation("TeacherClass")
+}
+
+model Pupil {
+  id      Int @id @default(autoincrement())
+  classId Int
+
+  class Class                  @relation(fields: [classId], references: [id])
+  marks DisciplinePupilsMark[]
+}
+
+model TeachersDisciplines {
+  teacherId    Int
+  disciplineId Int
+
+  teacher    Teacher    @relation(fields: [teacherId], references: [id])
+  discipline Discipline @relation(fields: [disciplineId], references: [id])
+
+  @@id([teacherId, disciplineId])
+}
+
+model ClassesDisciplines {
+  classId      Int
+  disciplineId Int
+
+  class      Class      @relation(fields: [classId], references: [id])
+  discipline Discipline @relation(fields: [disciplineId], references: [id])
+
+  @@id([classId, disciplineId])
+}
+
+model DisciplinePupilsMark {
+  disciplineId Int
+  pupilId      Int
+  mark         Int
+
+  discipline Discipline @relation(fields: [disciplineId], references: [id])
+  pupil      Pupil      @relation(fields: [pupilId], references: [id])
+
+  @@id([disciplineId, pupilId])
+}
